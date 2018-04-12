@@ -82,6 +82,18 @@ function processTransform(transform: Array<Object>): Array<Object> | Array<numbe
       case 'skewY':
         _multiplyTransform(result, MatrixMath.reuseSkewYCommand, [_convertToRadians(value)]);
         break;
+      case 'rotatePolar':
+        var point = [result[12], result[13], result[14]];
+        _multiplyTransform(result, MatrixMath.reuseRotatePolarCommand, [_convertToRadians(value[0]), _convertToRadians(value[1]), point, value[2] || [0, 0, 0]]);
+        break;
+      case 'rotateTheta':
+        var point = [result[12], result[13], result[14]];
+        _multiplyTransform(result, MatrixMath.reuseRotateThetaCommand, [_convertToRadians(value[0]), point, value[1] || [0, 0, 0]])
+        break;
+      case 'rotatePhi':
+        var point = [result[12], result[13], result[14]];
+        _multiplyTransform(result, MatrixMath.reuseRotatePhiCommand, [_convertToRadians(value[0]), point, value[1] || [0, 0, 0]]);
+        break;
       default:
         throw new Error('Invalid transform name: ' + key);
     }
@@ -170,7 +182,7 @@ function _validateTransform(key, value, transformation) {
     case 'rotateZ':
     case 'rotate':
     case 'skewX':
-    case 'skewY':
+    case 'skewY'
       invariant(
         typeof value === 'string',
         'Transform with key of "%s" must be a string: %s',
@@ -208,6 +220,23 @@ function _validateTransform(key, value, transformation) {
         'Transform with key of "%s" must be a number: %s',
         key,
         stringifySafe(transformation),
+      );
+      break;
+    case 'rotatePolar':
+      invariant(
+        value.length === 3 || (value.length === 4 && value[3].length === 3 && typeof(value[3]) === typeof([])),
+        'Transform with key of "%s" must be two angle values or two angle values and a 3-length list representing the center point for the spherical rotation surface: %s',
+        key,
+        stringifySafe(transformation)
+      );
+      break;
+    case 'rotateTheta':
+    case 'rotatePhi':
+      invariant(
+        value.length === 2 || (value.length === 3 && value[2].length === 3 && typeof(value[2]) === typeof([])),
+        'Transform with key of "%s" must be a single angle value or an angle value and a 3-length list representing the center point for the spherical rotation surface: %s',
+        key,
+        stringifySafe(transformation)
       );
       break;
     default:

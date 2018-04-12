@@ -69,7 +69,10 @@ var TransformPropTypes = {
       ReactPropTypes.shape({translateX: ReactPropTypes.number}),
       ReactPropTypes.shape({translateY: ReactPropTypes.number}),
       ReactPropTypes.shape({skewX: ReactPropTypes.string}),
-      ReactPropTypes.shape({skewY: ReactPropTypes.string})
+      ReactPropTypes.shape({skewY: ReactPropTypes.string}),
+      ReactPropTypes.shape({rotatePolar: ReactPropTypes.string}),
+      ReactPropTypes.shape({rotateTheta: ReactPropTypes.string}),
+      ReactPropTypes.shape({rotatePhi: ReactPropTypes.string}),
     ])
   ),
 
