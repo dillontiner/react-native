@@ -210,8 +210,8 @@ var MatrixMath = {
    */
   reuseRotateThetaCommand: function(matrixCommand, radians, point, center) {
     var x0, y0, z0, rho, theta, phi;
-    [x0, y0, z0] = MatrixMath.unitSphereCartesian(point, center);
-    [rho, theta, phi] = MatrixMath.unitSpherePolar(point, center);
+    [x0, y0, z0] = MatrixMath.onCartesianSphere(point, center);
+    [rho, theta, phi] = MatrixMath.onPolarSphere(point, center);
     var rotated = [rho, theta + radians, phi];
     var x1, y1, z1;
     [x1, y1, z1] = MatrixMath.polarToCartesian(rotated);
@@ -294,7 +294,7 @@ var MatrixMath = {
 
   getPhi: function(point, center) {
     var x, y, z, phi;
-    [x, y, z] = MatrixMath.unitSphereCartesian(point, center);
+    [x, y, z] = MatrixMath.onCartesianSphere(point, center);
     if (z === 0 && x === 0 && y < 0) {
       phi = Math.PI;
     } else {
@@ -319,7 +319,6 @@ var MatrixMath = {
 
   polarToCartesian: function(vector) {
     var rho, theta, phi;
-    console.log('polar2cart', vector);
     [rho, theta, phi] = vector;
     var x = rho * Math.sin(theta) * Math.sin(phi);
     var y = rho * Math.cos(theta);
