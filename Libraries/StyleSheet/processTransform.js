@@ -224,8 +224,9 @@ function _validateTransform(key, value, transformation) {
       break;
     case 'rotatePolar':
       invariant(
-        value.length === 3 || (value.length === 4 && value[3].length === 3 && typeof(value[3]) === typeof([])),
-        'Transform with key of "%s" must be two angle values or two angle values and a 3-length list representing the center point for the spherical rotation surface: %s',
+        typeof value[0] === 'number' && typeof value[1] === 'number' &&
+          (value.length === 2 || (value.length === 3 && value[2].length === 3)),
+        'Transform with key of "%s" must be [A, B] or [A, B, [X, Y, Z]] for angles A and B, center point [X, Y, Z]: %s',
         key,
         stringifySafe(transformation)
       );
@@ -233,8 +234,8 @@ function _validateTransform(key, value, transformation) {
     case 'rotateTheta':
     case 'rotatePhi':
       invariant(
-        value.length === 2 || (value.length === 3 && value[2].length === 3 && typeof(value[2]) === typeof([])),
-        'Transform with key of "%s" must be a single angle value or an angle value and a 3-length list representing the center point for the spherical rotation surface: %s',
+        typeof value[0] === 'number' && (value.length === 1 || (value.length === 2 && value[1].length === 3)),
+        'Transform with key of "%s" must be [A] or [A, [X, Y, Z]] for angle A, center point [X, Y, Z]: %s',
         key,
         stringifySafe(transformation)
       );

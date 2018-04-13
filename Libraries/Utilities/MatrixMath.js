@@ -205,7 +205,7 @@ var MatrixMath = {
   },
 
   /**
-   * Spherical rotation of Theta component
+   * Spherical rotation of Theta component (angle from positive Y-axis)
    * Sphere defined around given center with radius extending to given point
    */
   reuseRotateThetaCommand: function(matrixCommand, radians, point, center) {
@@ -228,17 +228,17 @@ var MatrixMath = {
   },
 
   /**
-   * Spherical rotation of Phi component (XZ plane)
+   * Spherical rotation of Phi component (angle from positive Z-axis on XZ plane, going towards positive X-axis)
    * Sphere defined around given center with radius extending to given point
    */
   reuseRotatePhiCommand: function(matrixCommand, radians, point, center) {
-    MatrixMath.reuseRotateYCommand(matrixCommand, radians);
     var x0, y0, z0, rho, theta, phi;
     [x0, y0, z0] = MatrixMath.onCartesianSphere(point, center);
     [rho, theta, phi] = MatrixMath.onPolarSphere(point, center);
     var rotated = [rho, theta, phi + radians];
     var x1, y1, z1;
     [x1, y1, z1] = MatrixMath.polarToCartesian(rotated);
+    MatrixMath.reuseRotateYCommand(matrixCommand, radians);
     matrixCommand[12] += x1 - x0;
     matrixCommand[14] += z1 - z0;
   },
@@ -248,26 +248,26 @@ var MatrixMath = {
    * Sphere defined around given center with radius extending to given point
    */
   reuseRotatePolarCommand: function(matrixCommand, theta, phi, point, center) {
-    var rTheta = MatrixMath.createIdentityMatrix();
-    var rPhi = MatrixMath.createIdentityMatrix();
-    MatrixMath.reuseRotatePhiCommand(rPhi, phi, point, center);
-    MatrixMath.reuseRotateThetaCommand(rTheta, theta, point, center);
+    var thetaMatrix = MatrixMath.createIdentityMatrix();
+    var phiMatrix = MatrixMath.createIdentityMatrix();
+    MatrixMath.reuseRotatePhiCommand(phiMatrix, phi, point, center);
+    MatrixMath.reuseRotateThetaCommand(thetaMatrix, theta, point, center);
    
-    matrixCommand[0] = rPhi[0]*rTheta[0] + rPhi[8]*rTheta[2];
-    matrixCommand[1] = rTheta[1]
-    matrixCommand[2] = rPhi[2]*rTheta[0] + rPhi[10]*rTheta[2];
+    matrixCommand[0] = phiMatrix[0] * thetaMatrix[0] + phiMatrix[8] * thetaMatrix[2];
+    matrixCommand[1] = thetaMatrix[1];
+    matrixCommand[2] = phiMatrix[2] * thetaMatrix[0] + phiMatrix[10] * thetaMatrix[2];
     
-    matrixCommand[4] = rPhi[0]*rTheta[4] + rPhi[8]*rTheta[6];
-    matrixCommand[5] = rTheta[5];
-    matrixCommand[6] = rPhi[2]*rTheta[4] + rPhi[10]*rTheta[6];
+    matrixCommand[4] = phiMatrix[0] * thetaMatrix[4] + phiMatrix[8] * thetaMatrix[6];
+    matrixCommand[5] = thetaMatrix[5];
+    matrixCommand[6] = phiMatrix[2] * thetaMatrix[4] + phiMatrix[10] * thetaMatrix[6];
     
-    matrixCommand[8] = rPhi[0]*rTheta[8] + rPhi[8]*rTheta[10];
-    matrixCommand[9] = rTheta[9]
-    matrixCommand[10] = rPhi[2]*rTheta[8] + rPhi[10]*rTheta[10];
+    matrixCommand[8] = phiMatrix[0] * thetaMatrix[8] + phiMatrix[8] * thetaMatrix[10];
+    matrixCommand[9] = thetaMatrix[9];
+    matrixCommand[10] = phiMatrix[2] * thetaMatrix[8] + phiMatrix[10] * thetaMatrix[10];
    
-    matrixCommand[12] = rPhi[9]*rTheta[12] + rPhi[8]*rTheta[14] + rPhi[12];
-    matrixCommand[13] = rTheta[13];
-    matrixCommand[14] = rPhi[2]*rTheta[12] + rPhi[10]*rTheta[14] + rPhi[14];
+    matrixCommand[12] = phiMatrix[9] * thetaMatrix[12] + phiMatrix[8] * thetaMatrix[14] + phiMatrix[12];
+    matrixCommand[13] = thetaMatrix[13];
+    matrixCommand[14] = phiMatrix[2] * thetaMatrix[12] + phiMatrix[10] * thetaMatrix[14] + phiMatrix[14];
   },
 
   /**
@@ -292,31 +292,34 @@ var MatrixMath = {
     return [rho, theta, phi];
   },
 
+  /**
+   * https://en.wikipedia.org/wiki/List_of_common_coordinate_transformations#From_Cartesian_coordinates_2
+   * Axes flipped (X, Y, Z) -> (Z, X, Y) in accordance with OpenGL Coordinate System
+   */
+  cartesianToPolar: function(vector) {
+    var x, y, z;
+    [x, y, z] = vector;
+    var rho = MatrixMath.magnitude(vector);
+    var theta = Math.acos(y / rho) || 0;
+    var phi = MatrixMath.getPhi([x, y, z], center);
+    return [rho, theta, phi];
+  },
+
   getPhi: function(point, center) {
     var x, y, z, phi;
     [x, y, z] = MatrixMath.onCartesianSphere(point, center);
     if (z === 0 && x === 0 && y < 0) {
       phi = Math.PI;
     } else {
-      phi = Math.acos(z / Math.sqrt(z**2 + x**2)) || 0;
+      phi = Math.acos(z / Math.sqrt(z ** 2 + x ** 2)) || 0;
     }
     return phi;
   },
 
-  magnitude: function(vector) {
-    var x, y, z;
-    [x, y, z] = vector;
-    return Math.sqrt(x**2 + y**2 + z**2)
-  },
-
-  cartesianToPolar: function(vector) {
-    [x, y, z] = vector;
-    var rho = Math.sqrt(x**2 + y**2 + z**2);
-    var theta = Math.acos(y / rho) || 0;
-    var phi = MatrixMath.getPhi([x, y, z], center);
-    return [rho, theta, phi];
-  },
-
+  /**
+   * https://en.wikipedia.org/wiki/List_of_common_coordinate_transformations#From_spherical_coordinates
+   * Axes flipped (X, Y, Z) -> (Z, X, Y) in accordance with OpenGL Coordinate System
+   */
   polarToCartesian: function(vector) {
     var rho, theta, phi;
     [rho, theta, phi] = vector;
@@ -324,6 +327,12 @@ var MatrixMath = {
     var y = rho * Math.cos(theta);
     var z = rho * Math.sin(theta) * Math.cos(phi);
     return [x, y, z];
+  },
+
+  magnitude: function(vector) {
+    var x, y, z;
+    [x, y, z] = vector;
+    return Math.sqrt(x ** 2 + y ** 2 + z ** 2);
   },
 
   multiplyInto: function(out, a, b) {
